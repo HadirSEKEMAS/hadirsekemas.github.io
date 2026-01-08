@@ -14,7 +14,7 @@
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen font-sans">
-
+    <audio id="scan-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
     <div id="login-container" class="flex items-center justify-center min-h-screen px-4">
         <div class="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
             <div class="text-center mb-8">
@@ -149,7 +149,7 @@
         </main>
     </div>
 
-    <script>
+<script>
         // CONFIGURATION
         const SB_URL = 'https://cawrvnutflgvbrisuqtd.supabase.co';
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhd3J2bnV0ZmxndmJyaXN1cXRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNDcwODgsImV4cCI6MjA4MTYyMzA4OH0.ZLSVVcZUl2muc584TL_UIYxykjrf_F_dOtDJp53A3cU';
@@ -165,9 +165,17 @@
         let allTeachers = []; 
         let allAttendance = []; 
 
+        // --- NEW: AUDIO SETUP ---
+        // Using a professional 'ding' sound from a public CDN
+        const scanSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+        function playDing() {
+            scanSound.currentTime = 0; // Reset to start if multiple scans happen fast
+            scanSound.play().catch(err => console.log("Audio waiting for user interaction..."));
+        }
+
         // --- 1. CONNECTION & AUTH LOGIC ---
 
-        // Monitor Online/Offline Status
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
 
@@ -183,10 +191,32 @@
             }
         }
 
+        // --- NEW: REALTIME SUBSCRIPTION ---
+        function subscribeToChanges() {
+            _supabase
+                .channel('realtime_attendance')
+                .on('postgres_changes', { 
+                    event: '*', // Listen for INSERT, UPDATE, or DELETE
+                    schema: 'public', 
+                    table: 'teacher_attendance' 
+                }, (payload) => {
+                    console.log('Realtime change received!', payload);
+                    
+                    // Only play sound and refresh if it's for the currently selected date
+                    const today = new Date().toISOString().split('T')[0];
+                    if (dateInput.value === today) {
+                        playDing();
+                        loadAttendanceData();
+                    }
+                })
+                .subscribe();
+        }
+
         async function checkSession() {
             const { data } = await _supabase.auth.getSession();
             if (data.session) {
                 showDashboard();
+                subscribeToChanges(); // Start listening after login
             }
         }
 
@@ -196,7 +226,10 @@
             const password = document.getElementById('password').value;
             const { error } = await _supabase.auth.signInWithPassword({ email, password });
             if (error) alert(error.message);
-            else showDashboard();
+            else {
+                showDashboard();
+                subscribeToChanges(); // Start listening after login
+            }
         });
 
         document.getElementById('logout-btn').addEventListener('click', async () => {
@@ -208,7 +241,6 @@
             loginContainer.classList.add('hidden');
             dashboard.classList.remove('hidden');
             
-            // Initial setup for date
             const now = new Date();
             dateInput.value = now.toISOString().split('T')[0];
             updateOnlineStatus();
@@ -245,12 +277,9 @@
             allTeachers = teachers;
             allAttendance = attendance;
 
-            // Update Stats
             document.getElementById('total-teachers').innerText = teachers.length;
             document.getElementById('present-today').innerText = attendance.length;
             document.getElementById('absent-today').innerText = teachers.length - attendance.length;
-
-            // Update Last Sync Timestamp
             document.getElementById('last-sync-time').innerText = new Date().toLocaleTimeString();
 
             renderTable(allTeachers);
@@ -259,7 +288,6 @@
         function renderTable(teachersToDisplay) {
             attendanceList.innerHTML = teachersToDisplay.map(teacher => {
                 const log = allAttendance.find(a => String(a['teacher_id']) === String(teacher.id));
-                
                 const clockInTime = log && log['clock_in'] ? log['clock_in'] : '<span class="text-slate-300">--:--:--</span>';
                 const clockOutTime = log && log['clock_out'] ? log['clock_out'] : '<span class="text-slate-300">--:--:--</span>';
                 
@@ -299,13 +327,11 @@
         function exportToCSV() {
             const date = dateInput.value;
             let csv = 'Teacher Name,Barcode,Clock In,Clock Out,Status\n';
-            
             allTeachers.forEach(teacher => {
                 const log = allAttendance.find(a => String(a['teacher_id']) === String(teacher.id));
                 const status = log ? 'PRESENT' : 'ABSENT';
                 csv += `"${teacher.honorific_title} ${teacher.name}",${teacher.barcode},${log?.clock_in || ''},${log?.clock_out || ''},${status}\n`;
             });
-
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -318,24 +344,20 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const date = dateInput.value;
-
             doc.setFontSize(18);
             doc.text("SEKEMAS Attendance Report", 14, 20);
             doc.setFontSize(10);
             doc.text(`Date: ${date} | Generated: ${new Date().toLocaleString()}`, 14, 28);
-
             const tableBody = allTeachers.map(t => {
                 const log = allAttendance.find(a => String(a['teacher_id']) === String(t.id));
                 return [`${t.honorific_title} ${t.name}`, t.barcode, log?.clock_in || '--', log?.clock_out || '--', log ? 'PRESENT' : 'ABSENT'];
             });
-
             doc.autoTable({
                 startY: 35,
                 head: [['Name', 'Barcode', 'In', 'Out', 'Status']],
                 body: tableBody,
                 headStyles: { fillColor: [79, 70, 229] }
             });
-
             doc.save(`Attendance_${date}.pdf`);
         }
 
