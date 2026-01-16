@@ -18,7 +18,7 @@
         .sidebar-link-active { background: #4f46e5; color: white; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
         .filter-btn-active { background: #4f46e5 !important; color: white !important; }
         
-        /* Modal Animation */
+        /* Modal Animation for Image Preview */
         #image-modal { transition: opacity 0.3s ease-in-out; }
         #image-modal.hidden { display: none; opacity: 0; }
         #image-modal.flex { display: flex; opacity: 1; }
@@ -41,16 +41,31 @@
         <div class="max-w-md w-full bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
             <div class="text-center mb-8">
                 <div class="inline-block p-2 rounded-2xl bg-indigo-50 mb-4 border border-indigo-100 shadow-sm">
-                    <img src="assets/school_logo.png" alt="Logo" class="h-16 w-auto object-contain">
+                    <img src="assets/school_logo.png" alt="School Lock" class="h-16 w-auto object-contain">
                 </div>
-                <h2 class="text-2xl font-extrabold text-gray-800">HadirSEKEMAS</h2>
-                <p class="text-gray-500 text-sm mt-1">Sistem Kehadiran Staff</p>
+                <h2 class="text-2xl font-extrabold text-gray-800">HadirSEKEMAS Guru</h2>
+                <p class="text-gray-500 text-sm mt-1">Sistem Pemantauan Kehadiran Guru</p>
             </div>
+            
             <form id="login-form" class="space-y-4">
-                <input type="email" id="email" placeholder="Emel Rasmi" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
-                <input type="password" id="password" placeholder="Kata Laluan" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">Masuk</button>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Emel Rasmi</label>
+                    <input type="email" id="email" placeholder="nama@emel.com" class="w-full px-4 py-3 mt-1 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+                </div>
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Kata Laluan</label>
+                    <input type="password" id="password" placeholder="••••••••" class="w-full px-4 py-3 mt-1 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">Masuk Sekarang</button>
             </form>
+
+            <div class="mt-8 pt-6 border-t border-gray-50 text-center">
+                <p class="text-[10px] text-slate-400 mb-2 font-black uppercase tracking-widest">Bukan Admin HadirSEKEMAS Guru?</p>
+                <a href="https://hadirsekemas.github.io/pelajar/" class="text-sm text-indigo-600 hover:text-indigo-800 font-bold flex items-center justify-center gap-1 group">
+                    Ke Portal HadirSEKEMAS Pelajar
+                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+                </a>
+            </div>
         </div>
     </div>
 
@@ -180,20 +195,18 @@
             const modal = document.getElementById('image-modal');
             const modalImg = document.getElementById('modal-img');
             const modalName = document.getElementById('modal-name');
-            
             modalImg.src = imgSrc;
             modalName.innerText = staffName;
-            
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            document.body.style.overflow = 'hidden'; // Stop scrolling
+            document.body.style.overflow = 'hidden'; 
         }
 
         function closeImageModal() {
             const modal = document.getElementById('image-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            document.body.style.overflow = 'auto'; // Resume scrolling
+            document.body.style.overflow = 'auto';
         }
 
         async function loadAttendanceData() {
@@ -313,13 +326,11 @@
             const doc = new jsPDF();
             doc.setFontSize(16); doc.text("Laporan Kehadiran Staff", 14, 15);
             doc.setFontSize(10); doc.text(`Tarikh: ${document.getElementById('date-filter').value}`, 14, 22);
-            
             const rows = allTeachers.map((t, i) => {
                 const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
                 const hourData = calculateHours(log?.clock_in, log?.clock_out);
                 return [i+1, t.name, t.staff_type || 'GURU', log?.clock_in || '--', log?.clock_out || '--', hourData.decimal, log ? 'HADIR' : 'TIADA'];
             });
-
             doc.autoTable({
                 startY: 30,
                 head: [['No', 'Nama', 'Type', 'In', 'Out', 'Hours', 'Status']],
@@ -329,7 +340,6 @@
             doc.save(`Laporan_Staff_${document.getElementById('date-filter').value}.pdf`);
         }
 
-        // Init
         document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
         document.getElementById('date-filter').addEventListener('change', loadAttendanceData);
         document.getElementById('teacher-search').addEventListener('input', renderTable);
@@ -350,7 +360,6 @@
                 document.getElementById('login-container').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
                 loadAttendanceData();
-
                 _supabase.channel('staff_updates').on('postgres_changes', { event: '*', schema: 'public', table: 'teacher_attendance' }, () => {
                     const sound = document.getElementById('scan-sound');
                     sound.play();
