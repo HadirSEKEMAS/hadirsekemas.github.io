@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HadirSEKEMAS | Portal Guru</title>
-    <meta name="description" content="Sistem Kehadiran Guru SK Muhammad Saman. Sila log masuk untuk menyemak rekod kehadiran guru.">
-    <meta name="google-site-verification" content="plWCK4xE8ROgP7jx97wRDb7XKGodTIbZ2l8AnXj2oHk" />
-    <meta name="author" content="HadirSEKEMAS">
-    <meta name="keywords" content="HadirSEKEMAS, SK Muhammad Saman, Kehadiran Guru, SEKEMAS">
-    
+    <title>HadirSEKEMAS | Portal Guru & AKP</title>
+    <meta name="description" content="Sistem Kehadiran Guru & AKP SK Muhammad Saman.">
     <link rel="icon" type="image/png" href="assets/school_icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,139 +15,116 @@
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
-        input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; opacity: 0.6; }
         .sidebar-link-active { background: #4f46e5; color: white; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
+        .filter-btn-active { background: #4f46e5 !important; color: white !important; }
         
-        .sidebar-nav::-webkit-scrollbar { width: 4px; }
-        .sidebar-nav::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        /* Modal Animation */
+        #image-modal { transition: opacity 0.3s ease-in-out; }
+        #image-modal.hidden { display: none; opacity: 0; }
+        #image-modal.flex { display: flex; opacity: 1; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
     <audio id="scan-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
 
+    <div id="image-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/90 backdrop-blur-sm items-center justify-center p-4" onclick="closeImageModal()">
+        <div class="relative max-w-2xl w-full flex flex-col items-center">
+            <button class="absolute -top-12 right-0 text-white hover:text-indigo-400 transition-colors">
+                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2.5"></path></svg>
+            </button>
+            <img id="modal-img" src="" class="w-full max-h-[80vh] object-contain rounded-3xl shadow-2xl border-4 border-white/10" onclick="event.stopPropagation()">
+            <h3 id="modal-name" class="text-white text-xl font-bold mt-6 tracking-tight"></h3>
+        </div>
+    </div>
+
     <div id="login-container" class="flex items-center justify-center min-h-screen px-4 flex-col bg-slate-50">
         <div class="max-w-md w-full bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
             <div class="text-center mb-8">
                 <div class="inline-block p-2 rounded-2xl bg-indigo-50 mb-4 border border-indigo-100 shadow-sm">
-                    <img src="assets\school_logo.png" alt="School Lock" class="h-16 w-auto object-contain">
+                    <img src="assets/school_logo.png" alt="Logo" class="h-16 w-auto object-contain">
                 </div>
-                <h2 class="text-2xl font-extrabold text-gray-800">HadirSEKEMAS Guru</h2>
-                <p class="text-gray-500 text-sm mt-1">Sistem Pemantauan Kehadiran Guru</p>
+                <h2 class="text-2xl font-extrabold text-gray-800">HadirSEKEMAS</h2>
+                <p class="text-gray-500 text-sm mt-1">Sistem Kehadiran Staff</p>
             </div>
-            
             <form id="login-form" class="space-y-4">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Emel Rasmi</label>
-                    <input type="email" id="email" placeholder="nama@emel.com" class="w-full px-4 py-3 mt-1 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase ml-1">Kata Laluan</label>
-                    <input type="password" id="password" placeholder="••••••••" class="w-full px-4 py-3 mt-1 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">Masuk Sekarang</button>
+                <input type="email" id="email" placeholder="Emel Rasmi" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+                <input type="password" id="password" placeholder="Kata Laluan" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-indigo-500 outline-none transition" required>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-3.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-lg">Masuk</button>
             </form>
-
-            <div class="mt-8 pt-6 border-t border-gray-50 text-center">
-                <p class="text-[10px] text-slate-400 mb-2 font-black uppercase tracking-widest">Bukan Admin HadirSEKEMAS Guru?</p>
-                <a href="https://hadirsekemas.github.io/pelajar/" class="text-sm text-indigo-600 hover:text-indigo-800 font-bold flex items-center justify-center gap-1 group">
-                    Ke Portal HadirSEKEMAS Pelajar
-                    <svg class="w-4 h-4 transform group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                </a>
-            </div>
         </div>
     </div>
 
     <div id="dashboard" class="hidden flex flex-col md:flex-row min-h-screen relative">
         <aside class="w-full md:w-72 bg-slate-900 text-white p-6 flex flex-col md:h-screen md:sticky md:top-0">
             <div class="flex flex-col items-center mb-8 pb-6 border-b border-slate-800">
-                <div class="relative">
-                    <img src="assets/school_logo.jpg" alt="SEKEMAS" class="w-16 h-16 object-cover rounded-2xl shadow-xl mb-4 border-2 border-slate-700">
-                    <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-slate-900 rounded-full"></div>
-                </div>
+                <img src="assets/school_logo.jpg" class="w-16 h-16 rounded-2xl mb-4 border-2 border-slate-700">
                 <div class="text-center">
-                    <span class="block text-[10px] font-black tracking-[0.2em] text-indigo-400 uppercase">HadirSEKEMAS</span>
-                    <span class="block text-xl font-extrabold text-white tracking-tight">Portal Guru</span>
+                    <span class="block text-[10px] font-black tracking-widest text-indigo-400 uppercase">HadirSEKEMAS</span>
+                    <span class="block text-xl font-extrabold text-white">Portal Staff</span>
                 </div>
             </div>
-
-            <nav class="flex-1 space-y-2 overflow-y-auto sidebar-nav pr-2">
+            <nav class="flex-1 space-y-2">
                 <a href="#" class="flex items-center space-x-3 p-3.5 rounded-xl sidebar-link-active transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-width="2"></path></svg>
                     <span class="font-bold">Utama</span>
                 </a>
-
-                <a href="https://hadirsekemas.github.io/pelajar/" target="_blank" class="flex items-center justify-between p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition group">
-                    <div class="flex items-center space-x-3">
-                        <svg class="w-5 h-5 text-slate-500 group-hover:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                        <span>HadirSEKEMAS Pelajar</span>
-                    </div>
-                    <svg class="w-3 h-3 opacity-0 group-hover:opacity-100 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                <a href="https://hadirsekemas.github.io/pelajar/" target="_blank" class="flex items-center space-x-3 p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"></path></svg>
+                    <span>Portal Pelajar</span>
                 </a>
             </nav>
-
-            <div class="pt-6 mt-4 border-t border-slate-800">
-                <button id="logout-btn" class="flex items-center space-x-3 text-slate-400 hover:text-rose-400 transition font-bold text-sm w-full group p-3 rounded-xl hover:bg-rose-500/10">
-                    <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                    <span>Log Keluar</span>
-                </button>
-            </div>
+            <button id="logout-btn" class="flex items-center space-x-3 text-slate-400 hover:text-rose-400 p-3 mt-4 rounded-xl hover:bg-rose-500/10 font-bold transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-width="2"></path></svg>
+                <span>Log Keluar</span>
+            </button>
         </aside>
 
         <main class="flex-1 p-4 md:p-10">
-            <header class="flex flex-col md:flex-row md:items-center justify-between mb-8 md:mb-10 gap-6">
+            <header class="flex flex-col md:flex-row justify-between mb-8 gap-6">
                 <div>
-                    <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Kehadiran Guru</h1>
-                    <p class="text-slate-500 mt-1 font-medium text-sm">Rekod log: <span id="current-date-label" class="text-indigo-600 font-bold underline decoration-indigo-200"></span></p>
+                    <h1 class="text-3xl font-black text-slate-800 uppercase tracking-tight">Rekod Kehadiran</h1>
+                    <p class="text-slate-500 font-medium">Tarikh: <span id="current-date-label" class="text-indigo-600 font-bold underline"></span></p>
                 </div>
-                <div class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-2">
+                <div class="flex flex-col items-end gap-2">
                     <div class="flex items-center space-x-3 bg-white px-5 py-2.5 rounded-2xl shadow-sm border border-slate-100">
-                        <span id="status-dot" class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></span>
-                        <span id="status-text" class="text-xs font-bold text-slate-600 uppercase tracking-wider">Live</span>
+                        <span id="status-dot" class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+                        <span id="status-text" class="text-xs font-bold text-slate-600 uppercase">Live Update</span>
                     </div>
-                    <span class="text-[9px] text-slate-400 uppercase font-black tracking-widest hidden md:block">Last Sync: <span id="last-sync-time" class="text-slate-500">Tiada</span></span>
+                    <span class="text-[9px] text-slate-400 uppercase font-black">Sync: <span id="last-sync-time">--</span></span>
                 </div>
             </header>
 
-            <div class="grid grid-cols-3 gap-2 md:gap-6 mb-8">
-                <div class="bg-white p-3 md:p-7 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100">
-                    <p class="text-[8px] md:text-xs text-slate-400 font-black uppercase tracking-widest leading-tight">Jumlah Guru</p>
-                    <h3 id="total-teachers" class="text-xl md:text-4xl font-black text-slate-800 mt-1 md:mt-2">0</h3>
+            <div class="flex gap-2 mb-6 bg-white p-1 rounded-2xl shadow-sm border border-slate-100 w-fit">
+                <button onclick="setRoleFilter('ALL')" id="filter-ALL" class="px-6 py-2.5 rounded-xl text-xs font-bold transition filter-btn-active">SEMUA</button>
+                <button onclick="setRoleFilter('GURU')" id="filter-GURU" class="px-6 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:bg-slate-50">GURU</button>
+                <button onclick="setRoleFilter('AKP')" id="filter-AKP" class="px-6 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:bg-slate-50">AKP</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 md:gap-6 mb-8">
+                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Jumlah</p>
+                    <h3 id="total-teachers" class="text-2xl md:text-4xl font-black text-slate-800">0</h3>
                 </div>
-                <div class="bg-white p-3 md:p-7 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100">
-                    <p class="text-[8px] md:text-xs text-green-500/70 font-black uppercase tracking-widest leading-tight">Hadir</p>
-                    <h3 id="present-today" class="text-xl md:text-4xl font-black text-green-600 mt-1 md:mt-2">0</h3>
+                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] text-green-500 font-black uppercase tracking-widest">Hadir</p>
+                    <h3 id="present-today" class="text-2xl md:text-4xl font-black text-green-600">0</h3>
                 </div>
-                <div class="bg-white p-3 md:p-7 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100">
-                    <p class="text-[8px] md:text-xs text-rose-500/70 font-black uppercase tracking-widest leading-tight">Tidak Hadir/Imbas</p>
-                    <h3 id="absent-today" class="text-xl md:text-4xl font-black text-rose-600 mt-1 md:mt-2">0</h3>
+                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] text-rose-500 font-black uppercase tracking-widest">Tiada Rekod</p>
+                    <h3 id="absent-today" class="text-2xl md:text-4xl font-black text-rose-600">0</h3>
                 </div>
             </div>
 
-            <div class="space-y-4 mb-8">
-                <div class="w-full">
-                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Tarikh Semakan</label>
-                    <input type="date" id="date-filter" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-50 outline-none transition shadow-sm text-slate-600 font-bold">
-                </div>
-
-                <div class="flex flex-row gap-2 items-end">
-                    <div class="flex-1 group">
-                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 ml-1 tracking-widest">Carian</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                            </span>
-                            <input type="text" id="teacher-search" class="w-full pl-9 pr-3 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-50 outline-none transition shadow-sm text-sm font-medium" placeholder="Nama/Barcode">
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2">
-                        <button onclick="exportToCSV()" class="p-3.5 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 text-slate-600 transition shadow-sm font-bold" title="Eksport CSV">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        </button>
-                        <button onclick="exportToPDF()" class="p-3.5 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition shadow-lg font-bold">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2-2v4"></path></svg>
-                        </button>
-                    </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <input type="date" id="date-filter" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-2xl font-bold shadow-sm outline-none">
+                <div class="flex gap-2">
+                    <input type="text" id="teacher-search" placeholder="Carian Nama / Barcode..." class="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none font-medium text-sm">
+                    <button onclick="exportToCSV()" class="p-3.5 bg-white border border-slate-200 rounded-2xl hover:bg-slate-50 transition" title="CSV">
+                        <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2"></path></svg>
+                    </button>
+                    <button onclick="exportToPDF()" class="p-3.5 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2-2v4" stroke-width="2"></path></svg>
+                    </button>
                 </div>
             </div>
 
@@ -160,22 +133,19 @@
                     <table class="w-full text-left">
                         <thead class="bg-slate-50/50 border-b border-slate-100">
                             <tr>
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Guru</th>
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Barcode</th>
-                                <th class="px-4 md:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Masuk</th>
-                                <th class="px-4 md:px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Keluar</th>
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest w-12">No.</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Maklumat Staff</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest hidden md:table-cell">Barcode</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Masuk</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Keluar</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Hours</th>
+                                <th class="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody id="attendance-list" class="divide-y divide-slate-50"></tbody>
                     </table>
                 </div>
-                <div id="empty-state" class="hidden p-20 text-center">
-                    <div class="text-slate-300 mb-4 flex justify-center">
-                        <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <p class="text-slate-500 font-bold">Tiada rekod guru ditemui.</p>
-                </div>
+                <div id="empty-state" class="hidden p-20 text-center text-slate-300 font-bold">Tiada rekod staff ditemui.</div>
             </div>
         </main>
     </div>
@@ -185,193 +155,218 @@
         const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhd3J2bnV0ZmxndmJyaXN1cXRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwNDcwODgsImV4cCI6MjA4MTYyMzA4OH0.ZLSVVcZUl2muc584TL_UIYxykjrf_F_dOtDJp53A3cU';
         const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
-        const loginContainer = document.getElementById('login-container');
-        const dashboard = document.getElementById('dashboard');
-        const attendanceList = document.getElementById('attendance-list');
-        const dateInput = document.getElementById('date-filter');
-        const emptyState = document.getElementById('empty-state');
-        const statusDot = document.getElementById('status-dot');
-        const statusText = document.getElementById('status-text');
+        let allTeachers = [];
+        let allAttendance = [];
+        let currentFilter = 'ALL';
 
-        let allTeachers = []; 
-        let allAttendance = []; 
-
-        function updateConnectionStatus() {
-            if (navigator.onLine) {
-                statusDot.className = "w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]";
-                statusText.innerText = "Live Updates";
-                statusText.classList.remove('text-rose-500');
-                if(!dashboard.classList.contains('hidden')) loadAttendanceData();
-            } else {
-                statusDot.className = "w-3 h-3 bg-rose-500 rounded-full shadow-[0_0_10px_rgba(244,63,94,0.5)]";
-                statusDot.classList.remove('animate-pulse');
-                statusText.innerText = "Offline";
-                statusText.classList.add('text-rose-500');
-            }
-        }
-
-        window.addEventListener('online', updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
-
-        function getLocalToday() {
-            const now = new Date();
-            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        }
-
-        function playDing() {
-            const sound = document.getElementById('scan-sound');
-            if(sound) {
-                sound.currentTime = 0;
-                sound.play().catch(() => {});
-            }
-        }
-
-        async function checkSession() {
-            const { data: { session } } = await _supabase.auth.getSession();
-            if (session) {
-                showDashboard();
-            } else {
-                loginContainer.classList.remove('hidden');
-                dashboard.classList.add('hidden');
-            }
-        }
-
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const { error } = await _supabase.auth.signInWithPassword({
-                email: document.getElementById('email').value,
-                password: document.getElementById('password').value
-            });
-            if (error) {
-                alert("Ralat Log Masuk: Emel atau kata laluan salah.");
-            } else {
-                playDing();
-                showDashboard();
-            }
-        });
-
-        document.getElementById('logout-btn').addEventListener('click', async () => {
-            await _supabase.auth.signOut();
-            dashboard.classList.add('hidden');
-            loginContainer.classList.remove('hidden');
-            allTeachers = [];
-            allAttendance = [];
-            setTimeout(() => { window.location.reload(); }, 500);
-        });
-
-        async function showDashboard() {
-            loginContainer.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            if (!dateInput.value) dateInput.value = getLocalToday();
-            await loadAttendanceData();
-            updateConnectionStatus();
+        // Calculation for working hours
+        function calculateHours(clockIn, clockOut) {
+            if (!clockIn || !clockOut) return { decimal: '--', full: 'Tiada rekod keluar' };
+            const start = new Date(`2026-01-16 ${clockIn}`);
+            const end = new Date(`2026-01-16 ${clockOut}`);
+            const diffMs = end - start;
+            if (diffMs < 0) return { decimal: '0.0', full: '0 Jam 0 Minit' };
             
-            _supabase.channel('realtime_attendance')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'teacher_attendance' }, () => {
-                    if (dateInput.value === getLocalToday()) { 
-                        playDing(); 
-                        loadAttendanceData(); 
-                    }
-                }).subscribe();
+            const totalMinutes = Math.floor(diffMs / (1000 * 60));
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            const decimal = (diffMs / (1000 * 60 * 60)).toFixed(1);
+            
+            return { decimal, full: `${hours} Jam ${minutes} Minit` };
+        }
+
+        // Feature: Image Modal Controls
+        function openImageModal(imgSrc, staffName) {
+            const modal = document.getElementById('image-modal');
+            const modalImg = document.getElementById('modal-img');
+            const modalName = document.getElementById('modal-name');
+            
+            modalImg.src = imgSrc;
+            modalName.innerText = staffName;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden'; // Stop scrolling
+        }
+
+        function closeImageModal() {
+            const modal = document.getElementById('image-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = 'auto'; // Resume scrolling
         }
 
         async function loadAttendanceData() {
-            if (!navigator.onLine) return;
-            const selDate = dateInput.value;
+            const selDate = document.getElementById('date-filter').value;
             document.getElementById('current-date-label').innerText = selDate;
 
-            const [{ data: teachers }, { data: attendance }] = await Promise.all([
+            const [{ data: staff }, { data: attendance }] = await Promise.all([
                 _supabase.from('teachers').select('*').order('barcode', { ascending: true }),
                 _supabase.from('teacher_attendance').select('*').eq('date', selDate)
             ]);
 
-            allTeachers = teachers || [];
+            allTeachers = staff || [];
             allAttendance = attendance || [];
-
-            document.getElementById('total-teachers').innerText = allTeachers.length;
-            document.getElementById('present-today').innerText = allAttendance.length;
-            document.getElementById('absent-today').innerText = allTeachers.length - allAttendance.length;
             document.getElementById('last-sync-time').innerText = new Date().toLocaleTimeString();
-
-            renderTable(allTeachers);
+            renderTable();
         }
 
-        function renderTable(data) {
-            if (data.length === 0) {
-                attendanceList.innerHTML = "";
-                emptyState.classList.remove('hidden');
+        function setRoleFilter(role) {
+            currentFilter = role;
+            ['ALL', 'GURU', 'AKP'].forEach(r => {
+                const btn = document.getElementById(`filter-${r}`);
+                if(r === role) btn.classList.add('filter-btn-active');
+                else btn.classList.remove('filter-btn-active');
+            });
+            renderTable();
+        }
+
+        function renderTable() {
+            const term = document.getElementById('teacher-search').value.toLowerCase();
+            const list = document.getElementById('attendance-list');
+            
+            const filtered = allTeachers.filter(t => {
+                const type = (t.staff_type || 'GURU').toUpperCase().trim();
+                const matchesRole = currentFilter === 'ALL' || type === currentFilter;
+                const matchesSearch = t.name.toLowerCase().includes(term) || t.barcode.toLowerCase().includes(term);
+                return matchesRole && matchesSearch;
+            });
+
+            document.getElementById('total-teachers').innerText = filtered.length;
+            
+            if (filtered.length === 0) {
+                list.innerHTML = "";
+                document.getElementById('empty-state').classList.remove('hidden');
                 return;
             }
-            
-            emptyState.classList.add('hidden');
-            data.sort((a, b) => a.barcode.localeCompare(b.barcode));
 
-            attendanceList.innerHTML = data.map(t => {
-                const log = allAttendance.find(a => String(a['teacher_id']) === String(t.id));
-                const statusClass = log ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
-                const rowClass = log ? 'hover:bg-emerald-50/40' : 'hover:bg-rose-50/40';
+            document.getElementById('empty-state').classList.add('hidden');
+            let presentCount = 0;
+
+            list.innerHTML = filtered.map((t, index) => {
+                const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
+                const type = (t.staff_type || 'GURU').toUpperCase().trim();
+                const hourData = calculateHours(log?.clock_in, log?.clock_out);
                 
+                const photoUrl = t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random`;
+                const fullName = `${t.honorific_title} ${t.name}`;
+
+                let lateTag = '';
+                if (type === 'GURU' && log?.clock_in) {
+                    const [h, m] = log.clock_in.split(':').map(Number);
+                    if (h > 7 || (h === 7 && m > 30)) {
+                        lateTag = '<span class="ml-2 bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded animate-pulse">LEWAT</span>';
+                    }
+                }
+
+                if (log) presentCount++;
+
                 return `
-                    <tr class="${rowClass} transition-colors group">
-                        <td class="px-4 md:px-8 py-5">
-                            <div class="flex items-center space-x-2 md:space-x-4">
-                                <img src="${t.photo_url}" class="w-8 h-8 md:w-11 md:h-11 rounded-xl md:rounded-2xl object-cover border-2 border-slate-100 shadow-sm"
-                                    onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random&bold=true'">
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="px-6 py-4 text-xs font-bold text-slate-400">${index + 1}</td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center space-x-3">
+                                <img src="${photoUrl}" 
+                                     onclick="openImageModal('${photoUrl}', '${fullName}')"
+                                     class="w-10 h-10 rounded-xl object-cover border cursor-pointer hover:scale-110 hover:shadow-md transition-all active:scale-95" 
+                                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}'">
                                 <div>
-                                    <div class="text-[11px] md:text-sm font-extrabold text-slate-800 leading-tight">${t.honorific_title} ${t.name}</div>
-                                    <div class="text-[8px] md:text-[9px] text-slate-400 font-black uppercase tracking-widest">Guru</div>
+                                    <div class="text-sm font-extrabold text-slate-800 flex items-center">${fullName} ${lateTag}</div>
+                                    <div class="text-[9px] text-indigo-500 font-black tracking-widest">${type}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-8 py-5 hidden md:table-cell">
-                            <span class="text-xs font-mono bg-slate-100 text-slate-500 px-3 py-1 rounded-lg font-bold">${t.barcode}</span>
+                        <td class="px-6 py-4 hidden md:table-cell text-xs font-mono font-bold text-slate-500">${t.barcode}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-center text-slate-600">${log?.clock_in || '--:--'}</td>
+                        <td class="px-6 py-4 text-sm font-bold text-center text-slate-600">${log?.clock_out || '--:--'}</td>
+                        <td class="px-6 py-4 text-sm font-black text-center text-indigo-600 cursor-help" title="${hourData.full}">
+                            ${hourData.decimal}
                         </td>
-                        <td class="px-4 md:px-8 py-5 text-[11px] md:text-sm text-slate-600 font-bold text-center">${log?.clock_in || '--:--'}</td>
-                        <td class="px-4 md:px-8 py-5 text-[11px] md:text-sm text-slate-600 font-bold text-center">${log?.clock_out || '--:--'}</td>
-                        <td class="px-4 md:px-8 py-5 text-right">
-                            <span class="inline-flex items-center px-2 md:px-4 py-1.5 rounded-lg md:rounded-xl text-[8px] md:text-[10px] font-black tracking-widest ${statusClass}">
+                        <td class="px-6 py-4 text-right">
+                            <span class="inline-flex px-3 py-1.5 rounded-lg text-[9px] font-black tracking-widest ${log ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
                                 ${log ? 'HADIR' : 'TIADA'}
                             </span>
                         </td>
                     </tr>
                 `;
             }).join('');
+
+            document.getElementById('present-today').innerText = presentCount;
+            document.getElementById('absent-today').innerText = filtered.length - presentCount;
         }
 
-        document.getElementById('teacher-search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const filtered = allTeachers.filter(t => t.name.toLowerCase().includes(term) || t.barcode.toLowerCase().includes(term));
-            renderTable(filtered);
-        });
-
-        dateInput.addEventListener('change', loadAttendanceData);
-
         function exportToCSV() {
-            let csv = 'Nama,Barcode,Masuk,Keluar,Status\n';
-            allTeachers.forEach(t => {
-                const log = allAttendance.find(a => String(a['teacher_id']) === String(t.id));
-                csv += `"${t.honorific_title} ${t.name}",${t.barcode},${log?.clock_in || ''},${log?.clock_out || ''},${log ? 'HADIR' : 'TIADA'}\n`;
+            let csv = 'No,Nama,Type,Barcode,Masuk,Keluar,Hours,Status\n';
+            allTeachers.forEach((t, i) => {
+                const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
+                const hourData = calculateHours(log?.clock_in, log?.clock_out);
+                csv += `${i+1},"${t.name}","${t.staff_type || 'GURU'}","${t.barcode}","${log?.clock_in || ''}","${log?.clock_out || ''}","${hourData.decimal}","${log ? 'HADIR' : 'TIADA'}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `Laporan_Kehadiran_${dateInput.value}.csv`; a.click();
+            a.href = url; a.download = `HadirSEKEMAS_${document.getElementById('date-filter').value}.csv`; a.click();
         }
 
         function exportToPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.setFontSize(18); doc.text("Laporan Kehadiran HadirSEKEMAS", 14, 20);
-            doc.setFontSize(10); doc.text(`Tarikh: ${dateInput.value}`, 14, 28);
-            const body = allTeachers.map(t => {
-                const log = allAttendance.find(a => String(a['teacher_id']) === String(t.id));
-                return [`${t.honorific_title} ${t.name}`, t.barcode, log?.clock_in || '--', log?.clock_out || '--', log ? 'HADIR' : 'TIADA'];
+            doc.setFontSize(16); doc.text("Laporan Kehadiran Staff", 14, 15);
+            doc.setFontSize(10); doc.text(`Tarikh: ${document.getElementById('date-filter').value}`, 14, 22);
+            
+            const rows = allTeachers.map((t, i) => {
+                const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
+                const hourData = calculateHours(log?.clock_in, log?.clock_out);
+                return [i+1, t.name, t.staff_type || 'GURU', log?.clock_in || '--', log?.clock_out || '--', hourData.decimal, log ? 'HADIR' : 'TIADA'];
             });
-            doc.autoTable({ startY: 35, head: [['Nama Guru', 'Barcode', 'Masuk', 'Keluar', 'Status']], body, headStyles: {fillColor: [30, 41, 59]} });
-            doc.save(`Kehadiran_Guru_${dateInput.value}.pdf`);
+
+            doc.autoTable({
+                startY: 30,
+                head: [['No', 'Nama', 'Type', 'In', 'Out', 'Hours', 'Status']],
+                body: rows,
+                headStyles: { fillColor: [30, 41, 59] }
+            });
+            doc.save(`Laporan_Staff_${document.getElementById('date-filter').value}.pdf`);
         }
 
-        checkSession();
+        // Init
+        document.getElementById('date-filter').value = new Date().toISOString().split('T')[0];
+        document.getElementById('date-filter').addEventListener('change', loadAttendanceData);
+        document.getElementById('teacher-search').addEventListener('input', renderTable);
+        
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const { error } = await _supabase.auth.signInWithPassword({
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value
+            });
+            if (error) alert("Log Masuk Gagal!"); else location.reload();
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => { _supabase.auth.signOut(); location.reload(); });
+
+        _supabase.auth.getSession().then(({data}) => {
+            if(data.session) {
+                document.getElementById('login-container').classList.add('hidden');
+                document.getElementById('dashboard').classList.remove('hidden');
+                loadAttendanceData();
+
+                _supabase.channel('staff_updates').on('postgres_changes', { event: '*', schema: 'public', table: 'teacher_attendance' }, () => {
+                    const sound = document.getElementById('scan-sound');
+                    sound.play();
+                    loadAttendanceData();
+                }).subscribe();
+            }
+        });
+
+        window.addEventListener('online', () => {
+            document.getElementById('status-dot').className = "w-3 h-3 bg-green-500 rounded-full animate-pulse";
+            document.getElementById('status-text').innerText = "Live Update";
+        });
+        window.addEventListener('offline', () => {
+            document.getElementById('status-dot').className = "w-3 h-3 bg-rose-500 rounded-full";
+            document.getElementById('status-text').innerText = "Offline";
+        });
     </script>
 </body>
 </html>
