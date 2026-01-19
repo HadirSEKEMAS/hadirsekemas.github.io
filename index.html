@@ -114,18 +114,22 @@
                 <button onclick="setRoleFilter('AKP')" id="filter-AKP" class="px-6 py-2.5 rounded-xl text-xs font-bold transition text-slate-400 hover:bg-slate-50">AKP</button>
             </div>
 
-            <div class="grid grid-cols-3 gap-3 md:gap-6 mb-8">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
                 <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Jumlah</p>
-                    <h3 id="total-teachers" class="text-2xl md:text-4xl font-black text-slate-800">0</h3>
+                    <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Jumlah Staff</p>
+                    <h3 id="total-teachers" class="text-2xl md:text-3xl font-black text-slate-800">0</h3>
                 </div>
-                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                    <p class="text-[10px] text-green-500 font-black uppercase tracking-widest">Hadir</p>
-                    <h3 id="present-today" class="text-2xl md:text-4xl font-black text-green-600">0</h3>
+                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-amber-400">
+                    <p class="text-[10px] text-amber-500 font-black uppercase tracking-widest">Sedang Bertugas</p>
+                    <h3 id="present-today" class="text-2xl md:text-3xl font-black text-amber-600">0</h3>
                 </div>
-                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-emerald-400">
+                    <p class="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Tamat Bertugas</p>
+                    <h3 id="finished-duty" class="text-2xl md:text-3xl font-black text-emerald-600">0</h3>
+                </div>
+                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-rose-400">
                     <p class="text-[10px] text-rose-500 font-black uppercase tracking-widest">Tiada Rekod</p>
-                    <h3 id="absent-today" class="text-2xl md:text-4xl font-black text-rose-600">0</h3>
+                    <h3 id="absent-today" class="text-2xl md:text-3xl font-black text-rose-600">0</h3>
                 </div>
             </div>
 
@@ -241,16 +245,19 @@
                 return matchesRole && matchesSearch;
             });
 
-            document.getElementById('total-teachers').innerText = filtered.length;
-            
+            // Reset Counters
+            let sedangBertugas = 0;
+            let tamatBertugas = 0;
+            let tiadaRekod = 0;
+
             if (filtered.length === 0) {
                 list.innerHTML = "";
                 document.getElementById('empty-state').classList.remove('hidden');
+                updateStats(0, 0, 0, 0);
                 return;
             }
 
             document.getElementById('empty-state').classList.add('hidden');
-            let presentCount = 0;
 
             list.innerHTML = filtered.map((t, index) => {
                 const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
@@ -259,13 +266,32 @@
                 const fullName = `${t.honorific_title} ${t.name}`;
                 const photoUrl = t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random`;
 
+                // Status Logic
+                let statusLabel = '';
+                let statusClass = '';
+
+                if (!log) {
+                    tiadaRekod++;
+                    statusLabel = 'TIADA REKOD';
+                    statusClass = 'bg-slate-100 text-slate-500';
+                } else if (log.clock_in && !log.clock_out) {
+                    sedangBertugas++;
+                    statusLabel = 'SEDANG BERTUGAS';
+                    statusClass = 'bg-amber-100 text-amber-700 animate-pulse';
+                } else if (log.clock_in && log.clock_out) {
+                    tamatBertugas++;
+                    statusLabel = 'TAMAT BERTUGAS';
+                    statusClass = 'bg-emerald-100 text-emerald-700';
+                }
+
+                // Late Logic
                 let lateTag = '';
                 if (type === 'GURU' && log?.clock_in) {
                     const [h, m] = log.clock_in.split(':').map(Number);
-                    if (h > 7 || (h === 7 && m > 30)) lateTag = '<span class="ml-2 bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded animate-pulse">LEWAT</span>';
+                    if (h > 7 || (h === 7 && m > 30)) {
+                        lateTag = '<span class="ml-2 bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded">LEWAT</span>';
+                    }
                 }
-
-                if (log) presentCount++;
 
                 return `
                     <tr class="hover:bg-slate-50 transition-colors">
@@ -284,17 +310,22 @@
                         <td class="px-6 py-4 text-sm font-bold text-center text-slate-600">${log?.clock_out || '--:--'}</td>
                         <td class="px-6 py-4 text-sm font-black text-center text-indigo-600 cursor-help" title="${hourData.full}">${hourData.decimal}</td>
                         <td class="px-6 py-4 text-right">
-                            <span class="inline-flex px-3 py-1.5 rounded-lg text-[9px] font-black tracking-widest ${log ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-                                ${log ? 'HADIR' : 'TIADA'}
+                            <span class="inline-flex px-3 py-1.5 rounded-lg text-[9px] font-black tracking-widest ${statusClass}">
+                                ${statusLabel}
                             </span>
                         </td>
                     </tr>`;
             }).join('');
 
-            document.getElementById('present-today').innerText = presentCount;
-            document.getElementById('absent-today').innerText = filtered.length - presentCount;
+            updateStats(filtered.length, sedangBertugas, tamatBertugas, tiadaRekod);
         }
 
+        function updateStats(total, active, finished, none) {
+            document.getElementById('total-teachers').innerText = total;
+            document.getElementById('present-today').innerText = active; // We reuse existing IDs or update HTML
+            document.getElementById('finished-duty').innerText = finished; 
+            document.getElementById('absent-today').innerText = none;
+        }
         // Initialize Date and Load Data
         document.getElementById('date-filter').value = getLocalToday();
         document.getElementById('date-filter').addEventListener('change', loadAttendanceData);
