@@ -119,7 +119,7 @@
                     <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest">Jumlah Staff</p>
                     <h3 id="total-teachers" class="text-2xl md:text-3xl font-black text-slate-800">0</h3>
                 </div>
-                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-amber-400">
+                <div onclick="showQuickView('ACTIVE')" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-amber-400 cursor-pointer hover:bg-amber-50 transition">
                     <p class="text-[10px] text-amber-500 font-black uppercase tracking-widest">Sedang Bertugas</p>
                     <h3 id="present-today" class="text-2xl md:text-3xl font-black text-amber-600">0</h3>
                 </div>
@@ -127,7 +127,7 @@
                     <p class="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Tamat Bertugas</p>
                     <h3 id="finished-duty" class="text-2xl md:text-3xl font-black text-emerald-600">0</h3>
                 </div>
-                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-rose-400">
+                <div onclick="showQuickView('ABSENT')" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-rose-400 cursor-pointer hover:bg-rose-50 transition">
                     <p class="text-[10px] text-rose-500 font-black uppercase tracking-widest">Tiada Rekod</p>
                     <h3 id="absent-today" class="text-2xl md:text-3xl font-black text-rose-600">0</h3>
                 </div>
@@ -166,6 +166,19 @@
                 <div id="empty-state" class="hidden p-20 text-center text-slate-300 font-bold">Tiada rekod staff ditemui.</div>
             </div>
         </main>
+    </div>
+
+    <div id="quick-view-modal" class="hidden fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 id="quick-view-title" class="text-lg font-black text-slate-800 uppercase tracking-tight">Senarai Staff</h3>
+                <button onclick="closeQuickView()" class="text-slate-400 hover:text-rose-500 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg>
+                </button>
+            </div>
+            <div id="quick-view-content" class="max-h-[60vh] overflow-y-auto p-4 space-y-2">
+                </div>
+        </div>
     </div>
 
     <script>
@@ -420,7 +433,49 @@
             });
 
             doc.save(`Kehadiran_${selDate}.pdf`);
-        }        
+        }
+
+        function showQuickView(type) {
+            const modal = document.getElementById('quick-view-modal');
+            const title = document.getElementById('quick-view-title');
+            const content = document.getElementById('quick-view-content');
+            
+            // Filter the staff based on current dashboard state
+            const staffList = allTeachers.filter(t => {
+                const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
+                const roleMatch = currentFilter === 'ALL' || (t.staff_type || 'GURU').toUpperCase().trim() === currentFilter;
+                
+                if (!roleMatch) return false;
+                
+                if (type === 'ACTIVE') return log && log.clock_in && !log.clock_out;
+                if (type === 'ABSENT') return !log;
+                return false;
+            });
+
+            title.innerText = type === 'ACTIVE' ? "Sedang Bertugas" : "Tiada Rekod Kehadiran";
+            
+            if (staffList.length === 0) {
+                content.innerHTML = `<p class="text-center text-slate-400 py-4 font-medium">Tiada staff dalam kategori ini.</p>`;
+            } else {
+                content.innerHTML = staffList.map(t => `
+                    <div class="flex items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                        <img src="${t.photo_url || 'https://ui-avatars.com/api/?name='+encodeURIComponent(t.name)}" class="w-10 h-10 rounded-xl object-cover mr-3">
+                        <div>
+                            <p class="text-sm font-bold text-slate-800">${t.honorific_title} ${t.name}</p>
+                            <p class="text-[10px] text-indigo-500 font-black uppercase">${t.staff_type}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            modal.classList.replace('hidden', 'flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeQuickView() {
+            document.getElementById('quick-view-modal').classList.replace('flex', 'hidden');
+            document.body.style.overflow = 'auto';
+        }
     </script>
 </body>
 </html>
