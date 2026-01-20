@@ -123,7 +123,7 @@
                     <p class="text-[10px] text-amber-500 font-black uppercase tracking-widest">Sedang Bertugas</p>
                     <h3 id="present-today" class="text-2xl md:text-3xl font-black text-amber-600">0</h3>
                 </div>
-                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-emerald-400">
+                <div onclick="showQuickView('FINISHED')" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-emerald-400 cursor-pointer hover:bg-emerald-50 transition">
                     <p class="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Tamat Bertugas</p>
                     <h3 id="finished-duty" class="text-2xl md:text-3xl font-black text-emerald-600">0</h3>
                 </div>
@@ -440,7 +440,6 @@
             const title = document.getElementById('quick-view-title');
             const content = document.getElementById('quick-view-content');
             
-            // Filter the staff based on current dashboard state
             const staffList = allTeachers.filter(t => {
                 const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
                 const roleMatch = currentFilter === 'ALL' || (t.staff_type || 'GURU').toUpperCase().trim() === currentFilter;
@@ -449,23 +448,35 @@
                 
                 if (type === 'ACTIVE') return log && log.clock_in && !log.clock_out;
                 if (type === 'ABSENT') return !log;
+                if (type === 'FINISHED') return log && log.clock_in && log.clock_out; // Added this line
                 return false;
             });
 
-            title.innerText = type === 'ACTIVE' ? "Sedang Bertugas" : "Tiada Rekod Kehadiran";
+            // Update Title based on type
+            if (type === 'ACTIVE') title.innerText = "Sedang Bertugas";
+            else if (type === 'ABSENT') title.innerText = "Tiada Rekod Kehadiran";
+            else if (type === 'FINISHED') title.innerText = "Tamat Bertugas (Dah Balik)";
             
             if (staffList.length === 0) {
-                content.innerHTML = `<p class="text-center text-slate-400 py-4 font-medium">Tiada staff dalam kategori ini.</p>`;
+                content.innerHTML = `<p class="text-center text-slate-400 py-8 font-medium">Tiada staff dalam kategori ini buat masa ini.</p>`;
             } else {
-                content.innerHTML = staffList.map(t => `
-                    <div class="flex items-center p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                        <img src="${t.photo_url || 'https://ui-avatars.com/api/?name='+encodeURIComponent(t.name)}" class="w-10 h-10 rounded-xl object-cover mr-3">
-                        <div>
-                            <p class="text-sm font-bold text-slate-800">${t.honorific_title} ${t.name}</p>
-                            <p class="text-[10px] text-indigo-500 font-black uppercase">${t.staff_type}</p>
+                content.innerHTML = staffList.map(t => {
+                    const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
+                    const timeInfo = type === 'FINISHED' ? `<p class="text-[10px] text-emerald-600 font-bold">Keluar: ${log.clock_out}</p>` : '';
+                    
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="flex items-center">
+                                <img src="${t.photo_url || 'https://ui-avatars.com/api/?name='+encodeURIComponent(t.name)}" class="w-10 h-10 rounded-xl object-cover mr-3">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800">${t.honorific_title} ${t.name}</p>
+                                    <p class="text-[10px] text-indigo-500 font-black uppercase">${t.staff_type}</p>
+                                </div>
+                            </div>
+                            ${timeInfo}
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             modal.classList.replace('hidden', 'flex');
