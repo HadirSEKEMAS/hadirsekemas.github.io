@@ -61,7 +61,7 @@
             <div class="mt-8 pt-6 border-t border-gray-50 text-center">
                 <p class="text-[10px] text-slate-400 mb-2 font-black uppercase tracking-widest">Bukan Admin HadirSEKEMAS Guru dan AKP?</p>
                 <a href="https://hadirsekemas.github.io/pelajar/" class="text-sm text-indigo-600 hover:text-indigo-800 font-bold flex items-center justify-center gap-1 group">
-                    Ke Portal HadirSEKEMAS Pelajar
+                    Ke Portal HadirSEKEMAS Murid
                     <svg class="w-4 h-4 transform group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
                 </a>
             </div>
@@ -84,7 +84,7 @@
                 </a>
                 <a href="https://hadirsekemas.github.io/pelajar/" target="_blank" class="flex items-center space-x-3 p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"></path></svg>
-                    <span>Portal Pelajar</span>
+                    <span>Portal Murid</span>
                 </a>
             </nav>
             <button id="logout-btn" class="flex items-center space-x-3 text-slate-400 hover:text-rose-400 p-3 mt-4 rounded-xl hover:bg-rose-500/10 font-bold transition">
@@ -122,14 +122,17 @@
                 <div onclick="showQuickView('ACTIVE')" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-amber-400 cursor-pointer hover:bg-amber-50 transition">
                     <p class="text-[10px] text-amber-500 font-black uppercase tracking-widest">Sedang Bertugas</p>
                     <h3 id="present-today" class="text-2xl md:text-3xl font-black text-amber-600">0</h3>
+                    <p class="text-[9px] text-amber-400 font-bold mt-1 italic uppercase tracking-tighter">Klik untuk lihat senarai</p>
                 </div>
                 <div onclick="showQuickView('FINISHED')" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-emerald-400 cursor-pointer hover:bg-emerald-50 transition">
                     <p class="text-[10px] text-emerald-500 font-black uppercase tracking-widest">Tamat Bertugas</p>
                     <h3 id="finished-duty" class="text-2xl md:text-3xl font-black text-emerald-600">0</h3>
+                    <p class="text-[9px] text-emerald-400 font-bold mt-1 italic uppercase tracking-tighter">Klik untuk lihat senarai</p>
                 </div>
                 <div onclick="showQuickView('ABSENT')" class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-rose-400 cursor-pointer hover:bg-rose-50 transition">
                     <p class="text-[10px] text-rose-500 font-black uppercase tracking-widest">Tiada Rekod</p>
                     <h3 id="absent-today" class="text-2xl md:text-3xl font-black text-rose-600">0</h3>
+                    <p class="text-[9px] text-rose-400 font-bold mt-1 italic uppercase tracking-tighter">Klik untuk lihat senarai</p>
                 </div>
             </div>
 
@@ -190,7 +193,6 @@
         let allAttendance = [];
         let currentFilter = 'ALL';
 
-        // 1. IMPROVED DATE LOGIC (Fixing timezone issue)
         function getLocalToday() {
             const now = new Date();
             const offset = now.getTimezoneOffset() * 60000; 
@@ -258,7 +260,6 @@
                 return matchesRole && matchesSearch;
             });
 
-            // Reset Counters
             let sedangBertugas = 0;
             let tamatBertugas = 0;
             let tiadaRekod = 0;
@@ -279,7 +280,6 @@
                 const fullName = `${t.honorific_title} ${t.name}`;
                 const photoUrl = t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=random`;
 
-                // Status Logic
                 let statusLabel = '';
                 let statusClass = '';
 
@@ -297,7 +297,6 @@
                     statusClass = 'bg-emerald-100 text-emerald-700';
                 }
 
-                // Late Logic
                 let lateTag = '';
                 if (type === 'GURU' && log?.clock_in) {
                     const [h, m] = log.clock_in.split(':').map(Number);
@@ -335,11 +334,11 @@
 
         function updateStats(total, active, finished, none) {
             document.getElementById('total-teachers').innerText = total;
-            document.getElementById('present-today').innerText = active; // We reuse existing IDs or update HTML
+            document.getElementById('present-today').innerText = active; 
             document.getElementById('finished-duty').innerText = finished; 
             document.getElementById('absent-today').innerText = none;
         }
-        // Initialize Date and Load Data
+
         document.getElementById('date-filter').value = getLocalToday();
         document.getElementById('date-filter').addEventListener('change', loadAttendanceData);
         document.getElementById('teacher-search').addEventListener('input', renderTable);
@@ -353,10 +352,9 @@
             if (error) alert("Log Masuk Gagal!"); else location.reload();
         });
 
-        // 2. FIXED LOGOUT LOGIC (Using async/await)
         document.getElementById('logout-btn').addEventListener('click', async () => { 
             await _supabase.auth.signOut(); 
-            window.location.href = window.location.pathname; // Paksa cuci URL dan reload
+            window.location.href = window.location.pathname;
         });
 
         _supabase.auth.getSession().then(({data}) => {
@@ -448,11 +446,10 @@
                 
                 if (type === 'ACTIVE') return log && log.clock_in && !log.clock_out;
                 if (type === 'ABSENT') return !log;
-                if (type === 'FINISHED') return log && log.clock_in && log.clock_out; // Added this line
+                if (type === 'FINISHED') return log && log.clock_in && log.clock_out;
                 return false;
             });
 
-            // Update Title based on type
             if (type === 'ACTIVE') title.innerText = "Sedang Bertugas";
             else if (type === 'ABSENT') title.innerText = "Tiada Rekod Kehadiran";
             else if (type === 'FINISHED') title.innerText = "Tamat Bertugas (Dah Balik)";
