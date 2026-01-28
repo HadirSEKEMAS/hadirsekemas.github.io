@@ -82,11 +82,7 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" stroke-width="2"></path></svg>
                     <span class="font-bold">Utama</span>
                 </a>
-                <a href="https://hadirsekemas.github.io/pelajar" class="flex items-center space-x-3 p-3.5 rounded-xl text-slate-400 hover:bg-slate-800 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"></path></svg>
-                    <span>Portal Murid</span>
-                </a>
-            </nav>
+                </nav>
             <button id="logout-btn" class="flex items-center space-x-3 text-slate-400 hover:text-rose-400 p-3 mt-4 rounded-xl hover:bg-rose-500/10 font-bold transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-width="2"></path></svg>
                 <span>Log Keluar</span>
@@ -179,8 +175,7 @@
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"></path></svg>
                 </button>
             </div>
-            <div id="quick-view-content" class="max-h-[60vh] overflow-y-auto p-4 space-y-2">
-                </div>
+            <div id="quick-view-content" class="max-h-[60vh] overflow-y-auto p-4 space-y-2"></div>
         </div>
     </div>
 
@@ -443,7 +438,6 @@
                 const roleMatch = currentFilter === 'ALL' || (t.staff_type || 'GURU').toUpperCase().trim() === currentFilter;
                 
                 if (!roleMatch) return false;
-                
                 if (type === 'ACTIVE') return log && log.clock_in && !log.clock_out;
                 if (type === 'ABSENT') return !log;
                 if (type === 'FINISHED') return log && log.clock_in && log.clock_out;
@@ -460,7 +454,6 @@
                 content.innerHTML = staffList.map(t => {
                     const log = allAttendance.find(a => String(a.teacher_id) === String(t.id));
                     const timeInfo = type === 'FINISHED' ? `<p class="text-[10px] text-emerald-600 font-bold">Keluar: ${log.clock_out}</p>` : '';
-                    
                     return `
                         <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
                             <div class="flex items-center">
@@ -471,11 +464,9 @@
                                 </div>
                             </div>
                             ${timeInfo}
-                        </div>
-                    `;
+                        </div>`;
                 }).join('');
             }
-
             modal.classList.replace('hidden', 'flex');
             document.body.style.overflow = 'hidden';
         }
